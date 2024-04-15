@@ -1,0 +1,7 @@
+html
+<% if (page.countdown) { %>
+<div class="countdown-wrap">
+  <div class="countdown-title"><%= theme.i18n.countdown_title %></div>
+  <div class="countdown" data-countdown="<%= page.countdown %>"></div>
+</div>
+<% } %>
