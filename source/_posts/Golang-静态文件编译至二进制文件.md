@@ -1,8 +1,10 @@
 ---
 title: Golang 静态文件编译至二进制文件
-date: 2023-04-08 16:07:37
 tags: Golang
+date: 2023-04-08 16:07:37
+description: 程序示例
 ---
+
 ```go
 #目录结构
 │  main.go

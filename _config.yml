@@ -8,7 +8,9 @@ subtitle: ''
 description: '试过才知道'
 keywords:
 author: YunDuan
-language: zh-Hans
+language: 
+  - zh-CN
+  - en
 timezone: ''
 
 # URL
