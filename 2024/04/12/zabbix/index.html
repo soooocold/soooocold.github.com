@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 6.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha256-wiz7ZSCn/btzhjKDQBms9Hx4sSeUYsDrTLg7roPstac=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.19.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":true,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"changyan","storage":true,"lazyload":false,"nav":null,"activeClass":"changyan"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="Zabbix基于Docker安装部署">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Zabbix 组件安装">
+<meta property="og:url" content="http://example.com/2024/04/12/zabbix/index.html">
+<meta property="og:site_name" content="YunDuan">
+<meta property="og:description" content="Zabbix基于Docker安装部署">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/images/20240412-1.png">
+<meta property="og:image" content="http://example.com/images/20240412-3.png">
+<meta property="article:published_time" content="2024-04-12T03:36:00.000Z">
+<meta property="article:modified_time" content="2024-04-15T00:47:20.372Z">
+<meta property="article:author" content="YunDuan">
+<meta property="article:tag" content="Zabbix">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/20240412-1.png">
+<link rel="publisher" href="%3Cg+:profile_link%3E">
+
+
+<link rel="canonical" href="http://example.com/2024/04/12/zabbix/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2024/04/12/zabbix/","path":"2024/04/12/zabbix/","title":"Zabbix 组件安装"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Zabbix 组件安装 | YunDuan</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">YunDuan</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">2</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">2</span></a></li><li class="menu-item menu-item-schedule"><a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%AE%89%E8%A3%85"><span class="nav-number">1.</span> <span class="nav-text">服务端安装</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E7%9B%AE%E5%BD%95%E5%87%86%E5%A4%87"><span class="nav-number">1.1.</span> <span class="nav-text">文件目录准备</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#docker-compose%E6%96%87%E4%BB%B6%E5%87%86%E5%A4%87"><span class="nav-number">1.2.</span> <span class="nav-text">docker compose文件准备</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%89%A7%E8%A1%8C%E9%83%A8%E7%BD%B2%E5%91%BD%E4%BB%A4"><span class="nav-number">1.3.</span> <span class="nav-text">执行部署命令</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">2.</span> <span class="nav-text">数据库初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%8B%E8%BD%BDzabbix%E6%BA%90%E7%A0%81%E5%8C%85%EF%BC%8C%E5%B0%86%E9%9C%80%E8%A6%81%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E6%96%87%E4%BB%B6%E9%80%9A%E8%BF%87%E6%95%B0%E6%8D%AE%E5%8D%B7%E4%B8%8A%E4%BC%A0%E5%88%B0%E5%AE%B9%E5%99%A8%E5%86%85%E9%83%A8%EF%BC%8C%E6%89%A7%E8%A1%8C%E6%95%B0%E6%8D%AE%E5%AF%BC%E5%85%A5%E6%93%8D%E4%BD%9C"><span class="nav-number">2.1.</span> <span class="nav-text">下载zabbix源码包，将需要的数据库文件通过数据卷上传到容器内部，执行数据导入操作</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%8F%82%E6%95%B0%E9%85%8D%E7%BD%AE"><span class="nav-number">3.</span> <span class="nav-text">服务端参数配置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6zabbix-server-conf%EF%BC%8C%E6%96%B0%E5%A2%9E%E4%BB%A5%E4%B8%8B%E5%8F%82%E6%95%B0%EF%BC%9A"><span class="nav-number">3.1.</span> <span class="nav-text">修改配置文件zabbix_server.conf，新增以下参数：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0zbx-server%E6%9C%8D%E5%8A%A1"><span class="nav-number">3.2.</span> <span class="nav-text">更新zbx_server服务</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WEB%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%85%8D%E7%BD%AE"><span class="nav-number">4.</span> <span class="nav-text">WEB服务器配置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%87%8D%E5%90%AFWEB%E6%9C%8D%E5%8A%A1"><span class="nav-number">4.1.</span> <span class="nav-text">重启WEB服务</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BF%E9%97%AEWEB%E6%9C%8D%E5%8A%A1"><span class="nav-number">4.2.</span> <span class="nav-text">访问WEB服务</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9%E9%BB%98%E8%AE%A4%E8%AF%AD%E8%A8%80"><span class="nav-number">4.3.</span> <span class="nav-text">修改默认语言</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">YunDuan</p>
+  <div class="site-description" itemprop="description">试过才知道</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/publicdomain/zero/1.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/cc_zero.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/04/12/zabbix/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="YunDuan">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="YunDuan">
+      <meta itemprop="description" content="试过才知道">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Zabbix 组件安装 | YunDuan">
+      <meta itemprop="description" content="Zabbix基于Docker安装部署">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Zabbix 组件安装
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-04-12 11:36:00" itemprop="dateCreated datePublished" datetime="2024-04-12T11:36:00+08:00">2024-04-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-04-15 08:47:20" itemprop="dateModified" datetime="2024-04-15T08:47:20+08:00">2024-04-15</time>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Changyan：</span>
+    
+    <a title="Zabbix 组件安装" href="/2024/04/12/zabbix/#SOHUCS" itemprop="discussionUrl">
+      <span id="sourceId::be310fc579110afea37aa788cb928e47" class="cy_cmt_count" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+</div>
+
+            <div class="post-description">Zabbix基于Docker安装部署</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p><strong>运行环境</strong></p>
+<div class="table-01" style="width: 50%;border: ">
+
+<table>
+<thead>
+<tr>
+<th align="left">分类</th>
+<th align="right">版本</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">操作系统</td>
+<td align="right">Ubuntu 20.04</td>
+</tr>
+<tr>
+<td align="left">docker</td>
+<td align="right">23.0.6</td>
+</tr>
+<tr>
+<td align="left">docker compose</td>
+<td align="right">1.25.0</td>
+</tr>
+</tbody></table>
+</div>
+
+
+<h3 id="服务端安装"><a href="#服务端安装" class="headerlink" title="服务端安装"></a>服务端安装</h3><p>服务端安装需要一下三个组件：</p>
+<ul>
+<li>Postgre13</li>
+<li>zabbix-server</li>
+<li>zabbix-web</li>
+</ul>
+<h4 id="文件目录准备"><a href="#文件目录准备" class="headerlink" title="文件目录准备"></a>文件目录准备</h4><p>需要预先创建文件目录，否则容器实例会提示数据卷挂载失败</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">dockerstore/</span><br><span class="line">└── zabbix</span><br><span class="line">    ├── zbx_pgdb</span><br><span class="line">    │   └── data #数据库数据文件</span><br><span class="line">    └── zbx_server</span><br><span class="line">        ├── etc #zbx_server配置文件</span><br><span class="line">        └── logs #zbx_server日志文件</span><br></pre></td></tr></table></figure>
+<h4 id="docker-compose文件准备"><a href="#docker-compose文件准备" class="headerlink" title="docker compose文件准备"></a>docker compose文件准备</h4><p>为了简化安装步骤，我编写了一个docker-compose文件</p>
+<figure class="highlight yml"><figcaption><span>prod.env</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">DOCKERSTORE=/data/dockerstore</span></span><br></pre></td></tr></table></figure>
+
+<details>
+<summary> docker-compose-zabbix.yml </summary>
+
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&quot;3.3&quot;</span></span><br><span class="line"><span class="attr">networks:</span></span><br><span class="line"> <span class="attr">cloudtop:</span></span><br><span class="line">  <span class="attr">driver:</span> <span class="string">overlay</span></span><br><span class="line">  <span class="attr">ipam:</span></span><br><span class="line">   <span class="attr">config:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">subnet:</span> <span class="number">10.255</span><span class="number">.255</span><span class="number">.0</span><span class="string">/24</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line"> <span class="attr">zbx_pgdb:</span></span><br><span class="line">  <span class="attr">image:</span> <span class="string">docker.io/postgres:13</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">   <span class="bullet">-</span> <span class="string">&quot;35400:5432&quot;</span></span><br><span class="line">  <span class="attr">networks:</span></span><br><span class="line">   <span class="attr">cloudtop:</span></span><br><span class="line">    <span class="attr">aliases:</span></span><br><span class="line">     <span class="bullet">-</span> <span class="string">zbx_pgdb</span></span><br><span class="line">  <span class="attr">volumes:</span></span><br><span class="line">   <span class="bullet">-</span> <span class="string">&quot;$&#123;DOCKERSTORE&#125;/zabbix/zbx_pgdb/data:/var/lib/postgresql/data&quot;</span></span><br><span class="line">  <span class="attr">deploy:</span></span><br><span class="line">   <span class="attr">placement:</span></span><br><span class="line">    <span class="attr">constraints:</span></span><br><span class="line">     <span class="bullet">-</span> <span class="string">&quot;node.role==manager&quot;</span></span><br><span class="line">  <span class="attr">environment:</span></span><br><span class="line">   <span class="attr">TZ :</span> <span class="string">&quot;Asia/Shanghai&quot;</span></span><br><span class="line">   <span class="attr">POSTGRES_PASSWORD :</span> <span class="string">&quot;postgres_cloudtop@2021&quot;</span></span><br><span class="line">   <span class="attr">PGDATA :</span> <span class="string">&quot;/var/lib/postgresql/data/pgdata&quot;</span></span><br><span class="line"> <span class="attr">zbx_server:</span></span><br><span class="line">  <span class="attr">image:</span> <span class="string">registry.cloudtop.cloud/x86_64/zabbix/server:6.4</span> <span class="comment">#基于源码编译制作的镜像，需要该镜像的同学可以联系我获取</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">   <span class="bullet">-</span> <span class="string">&quot;10051:10051&quot;</span></span><br><span class="line">  <span class="attr">networks:</span></span><br><span class="line">   <span class="attr">cloudtop:</span></span><br><span class="line">    <span class="attr">aliases:</span></span><br><span class="line">     <span class="bullet">-</span> <span class="string">zbx_server</span></span><br><span class="line">  <span class="attr">volumes:</span></span><br><span class="line">   <span class="bullet">-</span> <span class="string">&quot;$&#123;DOCKERSTORE&#125;/zabbix/zbx_server/etc:/opt/zabbix_server/etc&quot;</span></span><br><span class="line">   <span class="bullet">-</span> <span class="string">&quot;$&#123;DOCKERSTORE&#125;/zabbix/zbx_server/logs:/opt/zabbix_server/logs&quot;</span></span><br><span class="line">   <span class="bullet">-</span> <span class="string">&quot;/etc/localtime:/etc/localtime&quot;</span></span><br><span class="line">     <span class="comment">#entrypoint: &quot;/opt/zabbix_server/etc/start.sh&quot;</span></span><br><span class="line">  <span class="attr">deploy:</span></span><br><span class="line">   <span class="attr">placement:</span></span><br><span class="line">    <span class="attr">constraints:</span></span><br><span class="line">     <span class="bullet">-</span> <span class="string">&quot;node.role==manager&quot;</span></span><br><span class="line">       <span class="comment"># environment:</span></span><br><span class="line">    <span class="comment">#   TZ : &quot;Asia/Shanghai&quot; </span></span><br><span class="line">    <span class="comment">#设置时区不生效并且和/etc/localtime冲突，只挂在/etc/localtime可以生效</span></span><br><span class="line"> <span class="attr">zbx_web:</span></span><br><span class="line">  <span class="attr">image:</span> <span class="string">zabbix/zabbix-web-nginx-pgsql:centos-6.4-latest</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">   <span class="bullet">-</span> <span class="string">&quot;32080:8080&quot;</span></span><br><span class="line">  <span class="attr">networks:</span></span><br><span class="line">   <span class="attr">cloudtop:</span></span><br><span class="line">    <span class="attr">aliases:</span></span><br><span class="line">     <span class="bullet">-</span> <span class="string">zbx_web</span></span><br><span class="line">       <span class="comment">#volumes:</span></span><br><span class="line">          <span class="comment"># - &quot;$&#123;DOCKERSTORE&#125;/zabbix/zbx_web/zabbix:/usr/share/zabbix&quot; 如果需要定制一些页面功能，则需要把这个文件挂载到宿主机，持久化存储</span></span><br><span class="line">  <span class="attr">deploy:</span></span><br><span class="line">   <span class="attr">placement:</span></span><br><span class="line">    <span class="attr">constraints:</span></span><br><span class="line">     <span class="bullet">-</span> <span class="string">&quot;node.role==manager&quot;</span></span><br><span class="line">  <span class="attr">environment:</span></span><br><span class="line">   <span class="attr">DB_SERVER_HOST :</span> <span class="string">&quot;zbx_pgdb&quot;</span></span><br><span class="line">   <span class="attr">DB_SERVER_PORT :</span> <span class="string">&quot;5432&quot;</span></span><br><span class="line">   <span class="attr">POSTGRES_USER :</span> <span class="string">&quot;zabbix&quot;</span></span><br><span class="line">   <span class="attr">POSTGRES_PASSWORD :</span> <span class="string">&quot;Cloudtop@2023&quot;</span></span><br><span class="line">   <span class="comment">#ZBX_SERVER_HOST : &quot;zbx_server&quot; #不指定，HA集群需要从数据库读取server地址</span></span><br><span class="line">   <span class="attr">PHP_TZ :</span> <span class="string">&quot;Asia/Shanghai&quot;</span></span><br><span class="line">   <span class="attr">ZBX_SERVER_NAME :</span> <span class="string">&quot;数据运维平台&quot;</span></span><br></pre></td></tr></table></figure>
+</details>
+
+<ul>
+<li><strong>POSTGRES_PASSWORD 是数据库初始化时候定义的，需要保持一致</strong></li>
+</ul>
+<h4 id="执行部署命令"><a href="#执行部署命令" class="headerlink" title="执行部署命令"></a>执行部署命令</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker stack deploy -c &lt;(docker-compose --env-file prod.env -f docker-compose-zabbix.yml config) t --with-registry-auth</span><br></pre></td></tr></table></figure>
+<p>部署完成后，查看服务器是否正常启动<br><img src="/images/20240412-1.png" alt="图片"></p>
+<h3 id="数据库初始化"><a href="#数据库初始化" class="headerlink" title="数据库初始化"></a>数据库初始化</h3><p>根据官方文档，需要导入初始架构和数据</p>
+<h4 id="下载zabbix源码包，将需要的数据库文件通过数据卷上传到容器内部，执行数据导入操作"><a href="#下载zabbix源码包，将需要的数据库文件通过数据卷上传到容器内部，执行数据导入操作" class="headerlink" title="下载zabbix源码包，将需要的数据库文件通过数据卷上传到容器内部，执行数据导入操作"></a>下载zabbix源码包，将需要的数据库文件通过数据卷上传到容器内部，执行数据导入操作</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">wget https://cdn.zabbix.com/zabbix/sources/stable/6.4/zabbix-6.4.13.tar.gz</span><br><span class="line"></span><br><span class="line">tar -xzvf zabbix-6.4.13.tar.gz &amp;&amp; cd zabbix-6.4.13/database/postgresql</span><br><span class="line"></span><br><span class="line">cp cp data.sql  images.sql  schema.sql  /data/dockerstore/zabbix/zbx_pgdb/data/</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">进入zbx_postgre容器</span></span><br><span class="line">docker exec -it t_zbx_pgdb.1.xxx bash</span><br><span class="line"></span><br><span class="line">cd /var/lib/postgresql/data</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">创建zabbix数据库用户，输入密码并记录</span></span><br><span class="line">su postgres -c &quot;createuser --pwprompt zabbix&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">创建数据库</span></span><br><span class="line">su postgres -c &quot;createdb -O zabbix -E Unicode -T template0 zabbix&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">导入结构数据</span></span><br><span class="line">cat schema.sql | psql -U zabbix -d zabbix</span><br><span class="line">cat images.sql | psql -U zabbix -d zabbix</span><br><span class="line">cat data.sql | psql -U zabbix -d zabbix</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">完成退出</span></span><br></pre></td></tr></table></figure>
+
+
+<h3 id="服务端参数配置"><a href="#服务端参数配置" class="headerlink" title="服务端参数配置"></a>服务端参数配置</h3><h4 id="修改配置文件zabbix-server-conf，新增以下参数："><a href="#修改配置文件zabbix-server-conf，新增以下参数：" class="headerlink" title="修改配置文件zabbix_server.conf，新增以下参数："></a>修改配置文件zabbix_server.conf，新增以下参数：</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">DBHost=zbx_pgdb #pgdb容器主机名，也可以配置映射到宿主机ip，需要同步修改DBPort</span><br><span class="line">DBPassword= #zabbix用户的密码</span><br><span class="line">DBPort=5432</span><br></pre></td></tr></table></figure>
+
+<h4 id="更新zbx-server服务"><a href="#更新zbx-server服务" class="headerlink" title="更新zbx_server服务"></a>更新zbx_server服务</h4><p>这里我们选择删除zbx_server容器实例，守护进程会自动创建一个新实例</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker rm -f t_zbx_server.xxx</span><br></pre></td></tr></table></figure>
+
+<h3 id="WEB服务器配置"><a href="#WEB服务器配置" class="headerlink" title="WEB服务器配置"></a>WEB服务器配置</h3><h4 id="重启WEB服务"><a href="#重启WEB服务" class="headerlink" title="重启WEB服务"></a>重启WEB服务</h4><p>WEB服务需要的参数都已经在docker-compose-zabbix.yml文件中配置，因此在数据库初始化完成后WEB服务就可以正常访问了，为了防止奇怪的事情发生，我们手动重启WEB服务</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker rm -f t_zbx_web.xxx</span><br></pre></td></tr></table></figure>
+<h4 id="访问WEB服务"><a href="#访问WEB服务" class="headerlink" title="访问WEB服务"></a>访问WEB服务</h4><p>浏览器访问：<a target="_blank" rel="noopener" href="http://server_ip:32080/">http://server_ip:32080</a><br>默认账号：Admin<br>默认密码：zabbix<br><img src="/images/20240412-3.png" alt="图片"></p>
+<h4 id="修改默认语言"><a href="#修改默认语言" class="headerlink" title="修改默认语言"></a>修改默认语言</h4><p>Administration→General→GUI→Default language</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>YunDuan
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="http://example.com/2024/04/12/zabbix/" title="Zabbix 组件安装">http://example.com/2024/04/12/zabbix/</a>
+  </li>
+  <li class="post-copyright-license">
+      <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/publicdomain/zero/1.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>CC-ZERO</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/Zabbix/" rel="tag"># Zabbix</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2023/04/08/Golang-%E9%9D%99%E6%80%81%E6%96%87%E4%BB%B6%E7%BC%96%E8%AF%91%E8%87%B3%E4%BA%8C%E8%BF%9B%E5%88%B6%E6%96%87%E4%BB%B6/" rel="prev" title="Golang 静态文件编译至二进制文件">
+                  <i class="fa fa-angle-left"></i> Golang 静态文件编译至二进制文件
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments" id="SOHUCS" sid="be310fc579110afea37aa788cb928e47"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2024</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">YunDuan</span>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script><script src="/js/bookmark.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+<script class="next-config" data-name="changyan" type="application/json">{"enable":true,"appid":"cyxf3v9O3","appkey":"94960132a440cb57ffff1e4bd6418e12","count":true}</script>
+<script src="/js/third-party/comments/changyan.js"></script>
+
+</body>
+</html>
