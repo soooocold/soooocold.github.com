@@ -175,7 +175,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          <a href="/2024/04/15/docker-swarm/" class="post-title-link" itemprop="url">Docker Swarm overlay网络获取客户端真实IP</a>
+          <a href="/2024/04/15/docker-swarm/" class="post-title-link" itemprop="url">Docker overlay网络获取客户端真实IP</a>
         </h2>
 
         <div class="post-meta-container">
@@ -185,9 +185,15 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2024-04-15 09:41:32 / 修改时间：09:44:12" itemprop="dateCreated datePublished" datetime="2024-04-15T09:41:32+08:00">2024-04-15</time>
+      <time title="创建时间：2024-04-15 09:41:32" itemprop="dateCreated datePublished" datetime="2024-04-15T09:41:32+08:00">2024-04-15</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-04-26 17:17:37" itemprop="dateModified" datetime="2024-04-26T17:17:37+08:00">2024-04-26</time>
     </span>
 
   
@@ -199,7 +205,7 @@
       </span>
       <span class="post-meta-item-text">Changyan：</span>
     
-    <a title="Docker Swarm overlay网络获取客户端真实IP" href="/2024/04/15/docker-swarm/#SOHUCS" itemprop="discussionUrl">
+    <a title="Docker overlay网络获取客户端真实IP" href="/2024/04/15/docker-swarm/#SOHUCS" itemprop="discussionUrl">
       <span id="sourceId::5a7298973a68d77119df563c5d5f4945" class="cy_cmt_count" itemprop="commentCount"></span>
     </a>
   </span>
@@ -214,7 +220,23 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker service update t_openresty --publish-rm 80  --publish-add &quot;mode=host,published=80,target=80&quot; --publish-rm 443 --publish-add &quot;mode=host,published=443,target=443&quot;</span><br></pre></td></tr></table></figure>
+          <h3 id="现象描述"><a href="#现象描述" class="headerlink" title="现象描述"></a>现象描述</h3><p>使用overlay网络部署的服务（例如nginx），外部客户端访问nginx映射的业务端口，nginx日志记录不是客户端真实IP</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#创建一个nginx service</span><br><span class="line">docker service create -p 99:80 nginx</span><br><span class="line">#外部客户端访问</span><br><span class="line">curl http://xxx.xxx.xxx.xxx:99</span><br></pre></td></tr></table></figure>
+<p>观察nginx日志，日志记录的ip并不是客户端IP，而是10.0.0.2<br><img src="/images/20240426-2.png" alt="图片"></p>
+<h3 id="原因确认"><a href="#原因确认" class="headerlink" title="原因确认"></a>原因确认</h3><p>通过查阅资料，发现宿主机到服务内部的路由，中间会经过一个ingress网络，而nginx捕获的ip正式这个ingress网络的ip<br>通过命令检查一下这个ingress网络可以看到</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">默认不会创建，仅在创建一个带有端口映射的服务时，才会自动创建</span></span><br><span class="line">docker network inpect ingress</span><br></pre></td></tr></table></figure>
+<p><img src="/images/20240426-3.png" alt="图片"><br>通过下面这幅图，进一步了解ingress的作用，完成 routing mesh功能：docker swarm模式下同一个服务的端口会在所有节点暴露，通过任意节点请求都会到ingress网络，之后再转发到服务的虚拟IP。简单理解就是转发客户端请求到集群网络中。<br><img src="/images/20240426-1.png" alt="图片"></p>
+<p>官方文档也说明：在发布端口时，默认会ingress模式，但是还存在一种host模式，这种就是服务端口直接映射到宿主机端口。</p>
+<p><strong>需要注意：使用这种模式会导致仅服务实例运行节点会发布端口，并且不可复制（replica）</strong></p>
+<p><img src="/images/20240426-4.png" alt="图片"></p>
+<h3 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h3><p>服务采用host模式创建</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker service create --publish-add &quot;mode=host,published=99,target=80&quot; nginx</span><br></pre></td></tr></table></figure>
+
+<p>对于已经运行的服务，可以直接更新服务，参考：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker service update t_openresty --publish-rm 80  --publish-add &quot;mode=host,published=80,target=80&quot; --publish-rm 443 --publish-add &quot;mode=host,published=443,target=443&quot;</span><br></pre></td></tr></table></figure>
+
+<p>docker-compose，参考：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">version: &#x27;3&#x27;</span><br><span class="line">  </span><br><span class="line">services:</span><br><span class="line">  nginx:</span><br><span class="line">    image: nginx</span><br><span class="line">    network_mode: host</span><br><span class="line">    ports:</span><br><span class="line">      - &quot;99:80&quot;</span><br></pre></td></tr></table></figure>
 
       
     </div>
