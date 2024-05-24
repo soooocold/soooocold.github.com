@@ -1,32 +1,8 @@
----
-title: 基于Rsync增量备份方案
-date: 2024-05-14 16:41:51
-description: 提供一种Linux下通过通过rsync实现数据增量备份方案
-tags:
----
-### 原理简述
-#### 硬链接
-在Linux中，每一个文件必定有一个inode标识（包含文件的元数据并指向包含文件内容的数据块），
-其实每一个文件都是inode的硬链接，在文件创建时，默认连接到inode。
-
-![图片](/images/20240514-1.png)
-当我们将多个文件连接到同一个inode时，这些文件会共享真实的数据块，而不会增加存储消耗。
-![图片](/images/20240514-2.png)
-
-上图我们生成了一个10M大小的文件 myfile ，通过硬链接生成 myfile_ln，可以看到两个文件指向了相同的inode，并且没有消耗额外的存储空间
-#### rsync
-rsync 可按照硬链接的方式进行增量备份
-具体这里不演示了，好奇的小伙伴可以自行上手实验
-```shell
-rsync --link-dest basefile ...
-```
-### 备份脚本实例
-基于rsync的文件备份脚本
-<details>
-<summary> file_backup.sh </summary>
-
-```shell
 #!/bin/bash
+# 作者: Yun Duan
+# 邮箱: 444533902@qq.com
+# 创建日期: 2024-05-24
+
 # 注意
 # 该脚本需要在备份服务器上运行，通过SSH远程备份文件。
 # 请先完成备份服务器到源服务器免密SSH登录操作
@@ -39,9 +15,9 @@ set -o nounset
 set -o pipefail
 
 #数据源主机信息
-HOST=127.0.0.1
+HOST=10.228.2.11
 PORT=22
-USER=cloudtop
+USER=root
 
 #备份文件
 #基础文件多久更新(天)
@@ -53,8 +29,12 @@ BACKUP_DELETE_DAYS=15
 
 #文件MAP[源地址]=备份地址
 declare -A TARGET_MAP
-TARGET_MAP["/home/cloudtop/test"]="/home/cloudtop/rsync-shell/test_3"
-TARGET_MAP["/home/cloudtop/shell"]="/home/cloudtop/rsync-shell/shell_3"
+TARGET_MAP["/dockerstore/jetty_oaweb1_oaservice1_v1/webapps/fileInfo"]="/iscsi_volume/filebackup/oafile"
+
+#记录日志
+LOG_FILE="/iscsi_volume/filebackup/logfile.log"
+#进程锁文件前缀路径
+LOCK_PREFIX="/iscsi_volume/filebackup/lock_sign"
 
 
 #预处理，如果备份路径不存在则创建
@@ -64,10 +44,6 @@ do
         [ -d ${dest_path}/backupfile ] || mkdir -p ${dest_path}/backupfile
 
 done
-
-
-#记录日志
-LOG_FILE="/home/cloudtop/rsync-shell/logfile.log"
 
 log_message() {
     local message="$1"
@@ -131,7 +107,7 @@ backup_daily() {
         #参数2：目标目录
 	today=$(date +"%Y-%m-%d")
         #删除过期备份文件
-        find "$2/backupfile" -mindepth 1 -maxdepth 1 -cmin +${BACKUP_DELETE_DAYS} -exec rm -rf {} +
+        find "$2/backupfile" -mindepth 1 -maxdepth 1 -ctime +${BACKUP_DELETE_DAYS} -exec rm -rf {} +
         #本次备份文件路径
         backup_path="$2/backupfile/${today}"
         #备份文件依赖的基础文件
@@ -161,17 +137,28 @@ backup_daily() {
 
 
 }
+#备份完整步骤
+all_steps() {
+	if [ -e $3 ]; then
+        	log_message "任务$3已经在执行，本次执行跳过"
+		exit 0
+	else
+		touch $LOCK_PREFIX$3
+		check_base_files $1 $2
+		update_base_files $1 $2
+		backup_daily $1 $2
+		rm $LOCK_PREFIX$3
+	fi
+}
 #脚本主入口
 main() {
-#遍历map
+	sign_num=1
+	#遍历map
 	for src_path in "${!TARGET_MAP[@]}";
 	do
-		check_base_files "$src_path" "${TARGET_MAP[${src_path}]}"
-		update_base_files "$src_path" "${TARGET_MAP[${src_path}]}"
-		backup_daily "$src_path" "${TARGET_MAP[${src_path}]}" &
+		#每个备份任务后台运行
+		all_steps "$src_path" "${TARGET_MAP[${src_path}]}" "$LOCK_PREFIX$sign_num" &
+		((sign_num++))
 	done
 }
 main
-```
-
-</details>
