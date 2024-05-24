@@ -1,6 +1,7 @@
 ---
-title: 基于Linux硬链接的增量备份脚本
+title: 基于Rsync增量备份方案
 date: 2024-05-14 16:41:51
+description: 提供一种Linux下通过通过rsync实现数据增量备份方案
 tags:
 ---
 ### 原理简述
@@ -28,13 +29,14 @@ rsync --link-dest basefile ...
 #!/bin/bash
 # 注意
 # 该脚本需要在备份服务器上运行，通过SSH远程备份文件。
-# 请先完成备份服务器到源服务器免密SSH登录操作。
+# 请先完成备份服务器到源服务器免密SSH登录操作
+
 #任何错误立即退出
 set -o errexit
 #使用未初始化的变量立即退出
 set -o nounset
 #管道命令中子命令失败立即退出
-set -o pipe fail
+set -o pipefail
 
 #数据源主机信息
 HOST=127.0.0.1
@@ -59,11 +61,14 @@ TARGET_MAP["/home/cloudtop/shell"]="/home/cloudtop/rsync-shell/shell_3"
 for dest_path in "${TARGET_MAP[@]}";
 do
 	[ -d ${dest_path} ] || mkdir -p ${dest_path}
+        [ -d ${dest_path}/backupfile ] || mkdir -p ${dest_path}/backupfile
+
 done
 
 
 #记录日志
 LOG_FILE="/home/cloudtop/rsync-shell/logfile.log"
+
 log_message() {
     local message="$1"
     local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
@@ -85,87 +90,86 @@ pull_backup_files() {
 	#参数3：基础文件目录
         log_message "开始拉取备份文件：${1}"
         rsync -ar --delete --link-dest ${3} -e "ssh -p ${PORT}"   ${USER}@${HOST}:${1} ${2}
-        log_message "完成拉取备份文件：${1} -> ${2}"
+	log_message "完成拉取备份文件：${1} -> ${2}"
 }
 
 
 #检查基础文件是否存在
 check_base_files() {
-	#遍历目标路径，如果路径不存在，则拉取新基础文件
-	for src_path in "${!TARGET_MAP[@]}";
-	do
-		if [ ! -d "${TARGET_MAP[${src_path}]}/basefile" ]; then
-			#拉取新文件
-			log_message "未找到基础文件：${TARGET_MAP[${src_path}]}，准备拉取"
-			pull_base_files "${src_path}" "${TARGET_MAP[${src_path}]}/basefile"
-		fi
-
-	done
+        #参数1：源目录
+        #参数2：目标目录
+        if [ ! -d "$2/basefile" ]; then
+        	#拉取新文件
+        	log_message "未找到基础文件：$2，准备拉取"
+        	pull_base_files "$1" "$2/basefile"
+        fi
 }
 
 #更新基础文件
 update_base_files() {
+	#参数1：源目录
+        #参数2：目标目录
 
-	for src_path in "${!TARGET_MAP[@]}";
-	do
-		#获取基础文件目录修改的时间戳
-		base_dir_mod_time=$(stat -c %Y "${TARGET_MAP[${src_path}]}/basefile")
-		#获取基础文件过期的时间戳
-		base_expire_time=$((base_dir_mod_time + BASE_UPDATE_DAYS * 24 * 60 * 60))
-		#base_expire_time=$((base_dir_mod_time + 60))
-		#获取当前时间戳
-		current_time=$(date +%s)
-	
-		#如果当前时间大于基础文件过期时间，则删除过期文件，拉取新基础文件
-		if [ "$current_time" -ge "$base_expire_time" ]; then
-			log_message "基础文件过期：${TARGET_MAP[${src_path}]}/basefile，准备拉取"
-			pull_base_files "${src_path}" "${TARGET_MAP[${src_path}]}/basefile"
-		fi
-	done
+        #获取基础文件目录修改的时间戳
+        base_dir_mod_time=$(stat -c %Y "$2/basefile")
+	#获取基础文件过期的时间戳
+	base_expire_time=$((base_dir_mod_time + BASE_UPDATE_DAYS * 24 * 60 * 60))
+	#获取当前时间戳
+	current_time=$(date +%s)
+	#如果当前时间大于基础文件过期时间，则删除过期文件，拉取新基础文件
+	if [ "$current_time" -ge "$base_expire_time" ]; then
+		log_message "基础文件过期：$2/basefile，准备拉取"
+		pull_base_files "$1" "$2/basefile"
+	fi
+
 }
 
 
 #每天增量备份
 backup_daily() {
+        #参数1：源目录
+        #参数2：目标目录
 	today=$(date +"%Y-%m-%d")
-	for src_path in "${!TARGET_MAP[@]}";
-	do
-		#删除过期备份文件
-		find "${TARGET_MAP[${src_path}]}/backupfile" -mindepth 1 -maxdepth 1 -cmin +${BACKUP_DELETE_DAYS} -exec rm -rf {} +	
-		#本次备份文件路径
-		backup_path="${TARGET_MAP[${src_path}]}/backupfile/${today}"
-		#备份文件依赖的基础文件
-		basefile_path="${TARGET_MAP[${src_path}]}/basefile"
-		#如果备份目录存在，则创建备用备份目录
-		if [ -d ${backup_path} ]; then
-			count=1
-			while true; do
-				backup_path_new="${backup_path}"_"${count}"
-				if [ ! -d ${backup_path_new} ]; then
-					log_message "备份目录已存在，创建备用目录：${backup_path_new}"
-					mkdir -p ${backup_path_new}
-					pull_backup_files ${src_path} ${backup_path_new} ${basefile_path}
-					break
-				fi
-				# 如果备用目录存在，则尝试下一个备用目录
-				((count++))
-			done
-			
-		else
-			mkdir -p ${backup_path}
-			log_message "需要备份的文件：${src_path}，准备拉取"
-			pull_backup_files ${src_path} ${backup_path} ${basefile_path} 
-		fi
+        #删除过期备份文件
+        find "$2/backupfile" -mindepth 1 -maxdepth 1 -cmin +${BACKUP_DELETE_DAYS} -exec rm -rf {} +
+        #本次备份文件路径
+        backup_path="$2/backupfile/${today}"
+        #备份文件依赖的基础文件
+        basefile_path="$2/basefile"
+        #如果备份目录存在，则创建备用备份目录
+        if [ -d ${backup_path} ]; then
+        	count=1
+                while true; do
+			backup_path_new="${backup_path}"_"${count}"
+                        if [ ! -d ${backup_path_new} ]; then
+                        	log_message "备份目录已存在，创建备用目录：${backup_path_new}"
+                                mkdir -p ${backup_path_new}
+                                pull_backup_files $1 ${backup_path_new} ${basefile_path}
+        			log_message "本次备份已完成：${basefile_path}"
+                                break
+                        fi
+                        # 如果备用目录存在，则尝试下一个备用目录
+                        ((count++))
+                done
+	else
+                mkdir -p ${backup_path}
+                log_message "需要备份的文件：$1，准备拉取"
+                pull_backup_files $1 ${backup_path} ${basefile_path}
+                log_message "本次备份已完成：${basefile_path}"
 
-	done
+        fi
+
+
 }
 #脚本主入口
 main() {
-
-	update_base_files
-	check_base_files
-	update_base_files
-	backup_daily
+#遍历map
+	for src_path in "${!TARGET_MAP[@]}";
+	do
+		check_base_files "$src_path" "${TARGET_MAP[${src_path}]}"
+		update_base_files "$src_path" "${TARGET_MAP[${src_path}]}"
+		backup_daily "$src_path" "${TARGET_MAP[${src_path}]}" &
+	done
 }
 main
 ```

@@ -1,6 +1,7 @@
 ---
 title: Docker overlay网络获取客户端真实IP
 date: 2024-04-15 09:41:32
+description: 解决overlay网络下，Nginx等web服务器无法获取客户端真实IP问题
 tags: docker
 ---
 ### 现象描述
