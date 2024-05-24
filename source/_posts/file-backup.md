@@ -1,3 +1,31 @@
+---
+title: 基于Rsync增量备份方案
+date: 2024-05-14 16:41:51
+description: 提供一种Linux下通过通过rsync实现数据增量备份方案
+tags:
+---
+### 原理简述
+#### 硬链接
+在Linux中，每一个文件必定有一个inode标识（包含文件的元数据并指向包含文件内容的数据块），
+其实每一个文件都是inode的硬链接，在文件创建时，默认连接到inode。
+
+![图片](/images/20240514-1.png)
+当我们将多个文件连接到同一个inode时，这些文件会共享真实的数据块，而不会增加存储消耗。
+![图片](/images/20240514-2.png)
+
+上图我们生成了一个10M大小的文件 myfile ，通过硬链接生成 myfile_ln，可以看到两个文件指向了相同的inode，并且没有消耗额外的存储空间
+#### rsync
+rsync 可按照硬链接的方式进行增量备份
+具体这里不演示了，好奇的小伙伴可以自行上手实验
+```shell
+rsync --link-dest basefile ...
+```
+### 备份脚本实例
+基于rsync的文件备份脚本
+<details>
+<summary> file_backup.sh </summary>
+
+```shell
 #!/bin/bash
 # 作者: Yun Duan
 # 邮箱: 444533902@qq.com
@@ -15,7 +43,7 @@ set -o nounset
 set -o pipefail
 
 #数据源主机信息
-HOST=10.228.2.11
+HOST=127.0.0.1
 PORT=22
 USER=root
 
@@ -139,7 +167,7 @@ backup_daily() {
 }
 #备份完整步骤
 all_steps() {
-	if [ -e $3 ]; then
+	if [ -e $LOCK_PREFIX$3 ]; then
         	log_message "任务$3已经在执行，本次执行跳过"
 		exit 0
 	else
@@ -157,8 +185,11 @@ main() {
 	for src_path in "${!TARGET_MAP[@]}";
 	do
 		#每个备份任务后台运行
-		all_steps "$src_path" "${TARGET_MAP[${src_path}]}" "$LOCK_PREFIX$sign_num" &
+		all_steps "$src_path" "${TARGET_MAP[${src_path}]}" "$sign_num" &
 		((sign_num++))
 	done
 }
 main
+```
+
+</details>
