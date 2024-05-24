@@ -175,7 +175,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          <a href="/2024/05/14/file-backup/" class="post-title-link" itemprop="url">基于Rsync增量备份方案</a>
+          <a href="/2024/05/14/file-backup/" class="post-title-link" itemprop="url">未命名</a>
         </h2>
 
         <div class="post-meta-container">
@@ -193,7 +193,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2024-05-24 14:10:10" itemprop="dateModified" datetime="2024-05-24T14:10:10+08:00">2024-05-24</time>
+      <time title="修改时间：2024-05-24 16:38:25" itemprop="dateModified" datetime="2024-05-24T16:38:25+08:00">2024-05-24</time>
     </span>
 
   
@@ -205,7 +205,7 @@
       </span>
       <span class="post-meta-item-text">Changyan：</span>
     
-    <a title="基于Rsync增量备份方案" href="/2024/05/14/file-backup/#SOHUCS" itemprop="discussionUrl">
+    <a title="" href="/2024/05/14/file-backup/#SOHUCS" itemprop="discussionUrl">
       <span id="sourceId::4882300f09296651e11f85251db0fd84" class="cy_cmt_count" itemprop="commentCount"></span>
     </a>
   </span>
@@ -220,15 +220,36 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <p>提供一种Linux下通过通过rsync实现数据增量备份方案</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/05/14/file-backup/">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
+          <p>#!&#x2F;bin&#x2F;bash</p>
+<h1 id="作者-Yun-Duan"><a href="#作者-Yun-Duan" class="headerlink" title="作者: Yun Duan"></a>作者: Yun Duan</h1><h1 id="邮箱-x34-x34-x34-x35-x33-x33-57-48-50-64-x71-113-x2e-99-x6f-x6d"><a href="#邮箱-x34-x34-x34-x35-x33-x33-57-48-50-64-x71-113-x2e-99-x6f-x6d" class="headerlink" title="邮箱: &#x34;&#x34;&#x34;&#x35;&#x33;&#x33;&#57;&#48;&#50;&#64;&#x71;&#113;&#x2e;&#99;&#x6f;&#x6d;"></a>邮箱: <a href="mailto:&#x34;&#x34;&#x34;&#x35;&#x33;&#x33;&#57;&#48;&#50;&#64;&#x71;&#113;&#x2e;&#99;&#x6f;&#x6d;">&#x34;&#x34;&#x34;&#x35;&#x33;&#x33;&#57;&#48;&#50;&#64;&#x71;&#113;&#x2e;&#99;&#x6f;&#x6d;</a></h1><h1 id="创建日期-2024-05-24"><a href="#创建日期-2024-05-24" class="headerlink" title="创建日期: 2024-05-24"></a>创建日期: 2024-05-24</h1><h1 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h1><h1 id="该脚本需要在备份服务器上运行，通过SSH远程备份文件。"><a href="#该脚本需要在备份服务器上运行，通过SSH远程备份文件。" class="headerlink" title="该脚本需要在备份服务器上运行，通过SSH远程备份文件。"></a>该脚本需要在备份服务器上运行，通过SSH远程备份文件。</h1><h1 id="请先完成备份服务器到源服务器免密SSH登录操作"><a href="#请先完成备份服务器到源服务器免密SSH登录操作" class="headerlink" title="请先完成备份服务器到源服务器免密SSH登录操作"></a>请先完成备份服务器到源服务器免密SSH登录操作</h1><p>#任何错误立即退出<br>set -o errexit<br>#使用未初始化的变量立即退出<br>set -o nounset<br>#管道命令中子命令失败立即退出<br>set -o pipefail</p>
+<p>#数据源主机信息<br>HOST&#x3D;10.228.2.11<br>PORT&#x3D;22<br>USER&#x3D;root</p>
+<p>#备份文件<br>#基础文件多久更新(天)<br>BASE_UPDATE_DAYS&#x3D;15<br>#备份文件多久删除（天）<br>BACKUP_DELETE_DAYS&#x3D;15</p>
+<p>#文件MAP[源地址]&#x3D;备份地址<br>declare -A TARGET_MAP<br>TARGET_MAP[“&#x2F;dockerstore&#x2F;jetty_oaweb1_oaservice1_v1&#x2F;webapps&#x2F;fileInfo”]&#x3D;”&#x2F;iscsi_volume&#x2F;filebackup&#x2F;oafile”</p>
+<p>#记录日志<br>LOG_FILE&#x3D;”&#x2F;iscsi_volume&#x2F;filebackup&#x2F;logfile.log”<br>#进程锁文件前缀路径<br>LOCK_PREFIX&#x3D;”&#x2F;iscsi_volume&#x2F;filebackup&#x2F;lock_sign”</p>
+<p>#预处理，如果备份路径不存在则创建<br>for dest_path in “${TARGET_MAP[@]}”;<br>do<br>    [ -d ${dest_path} ] || mkdir -p ${dest_path}<br>        [ -d ${dest_path}&#x2F;backupfile ] || mkdir -p ${dest_path}&#x2F;backupfile</p>
+<p>done</p>
+<p>log_message() {<br>    local message&#x3D;”$1”<br>    local timestamp&#x3D;$(date +”%Y-%m-%d %H:%M:%S”)<br>    echo “[$timestamp] $message” &gt;&gt; “$LOG_FILE”<br>}</p>
+<p>#拉取基础文件<br>pull_base_files() {<br>    #参数1：源目录<br>    #参数2：目标目录<br>    log_message “开始拉取基础文件：${1}”<br>    rsync -ar –delete -e “ssh -p ${PORT}”  ${USER}@${HOST}:${1} ${2}<br>    log_message “完成拉取基础文件：${1} -&gt; ${2}”<br>}<br>#拉取备份文件<br>pull_backup_files() {<br>        #参数1：源目录<br>        #参数2：目标目录<br>    #参数3：基础文件目录<br>        log_message “开始拉取备份文件：${1}”<br>        rsync -ar –delete –link-dest ${3} -e “ssh -p ${PORT}”   ${USER}@${HOST}:${1} ${2}<br>    log_message “完成拉取备份文件：${1} -&gt; ${2}”<br>}</p>
+<p>#检查基础文件是否存在<br>check_base_files() {<br>        #参数1：源目录<br>        #参数2：目标目录<br>        if [ ! -d “$2&#x2F;basefile” ]; then<br>            #拉取新文件<br>            log_message “未找到基础文件：$2，准备拉取”<br>            pull_base_files “$1” “$2&#x2F;basefile”<br>        fi<br>}</p>
+<p>#更新基础文件<br>update_base_files() {<br>    #参数1：源目录<br>        #参数2：目标目录</p>
+<pre><code>    #获取基础文件目录修改的时间戳
+    base_dir_mod_time=$(stat -c %Y &quot;$2/basefile&quot;)
+#获取基础文件过期的时间戳
+base_expire_time=$((base_dir_mod_time + BASE_UPDATE_DAYS * 24 * 60 * 60))
+#获取当前时间戳
+current_time=$(date +%s)
+#如果当前时间大于基础文件过期时间，则删除过期文件，拉取新基础文件
+if [ &quot;$current_time&quot; -ge &quot;$base_expire_time&quot; ]; then
+    log_message &quot;基础文件过期：$2/basefile，准备拉取&quot;
+    pull_base_files &quot;$1&quot; &quot;$2/basefile&quot;
+fi
+</code></pre>
+<p>}</p>
+<p>#每天增量备份<br>backup_daily() {<br>        #参数1：源目录<br>        #参数2：目标目录<br>    today&#x3D;$(date +”%Y-%m-%d”)<br>        #删除过期备份文件<br>        find “$2&#x2F;backupfile” -mindepth 1 -maxdepth 1 -ctime +${BACKUP_DELETE_DAYS} -exec rm -rf {} +<br>        #本次备份文件路径<br>        backup_path&#x3D;”$2&#x2F;backupfile&#x2F;${today}”<br>        #备份文件依赖的基础文件<br>        basefile_path&#x3D;”$2&#x2F;basefile”<br>        #如果备份目录存在，则创建备用备份目录<br>        if [ -d ${backup_path} ]; then<br>            count&#x3D;1<br>                while true; do<br>            backup_path_new&#x3D;”${backup_path}”_”${count}”<br>                        if [ ! -d ${backup_path_new} ]; then<br>                            log_message “备份目录已存在，创建备用目录：${backup_path_new}”<br>                                mkdir -p ${backup_path_new}<br>                                pull_backup_files $1 ${backup_path_new} ${basefile_path}<br>                    log_message “本次备份已完成：${basefile_path}”<br>                                break<br>                        fi<br>                        # 如果备用目录存在，则尝试下一个备用目录<br>                        ((count++))<br>                done<br>    else<br>                mkdir -p ${backup_path}<br>                log_message “需要备份的文件：$1，准备拉取”<br>                pull_backup_files $1 ${backup_path} ${basefile_path}<br>                log_message “本次备份已完成：${basefile_path}”</p>
+<pre><code>    fi
+</code></pre>
+<p>}<br>#备份完整步骤<br>all_steps() {<br>    if [ -e $3 ]; then<br>            log_message “任务$3已经在执行，本次执行跳过”<br>        exit 0<br>    else<br>        touch $LOCK_PREFIX$3<br>        check_base_files $1 $2<br>        update_base_files $1 $2<br>        backup_daily $1 $2<br>        rm $LOCK_PREFIX$3<br>    fi<br>}<br>#脚本主入口<br>main() {<br>    sign_num&#x3D;1<br>    #遍历map<br>    for src_path in “${!TARGET_MAP[@]}”;<br>    do<br>        #每个备份任务后台运行<br>        all_steps “$src_path” “${TARGET_MAP[${src_path}]}” “$LOCK_PREFIX$sign_num” &amp;<br>        ((sign_num++))<br>    done<br>}<br>main</p>
+
       
     </div>
 
