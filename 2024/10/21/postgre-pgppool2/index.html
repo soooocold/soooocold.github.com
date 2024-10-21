@@ -19,26 +19,29 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"soooocold.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.19.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"bookmark":{"enable":true,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"changyan","storage":true,"lazyload":false,"nav":null,"activeClass":"changyan"},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js"></script>
 
-    <meta name="description" content="试过才知道">
-<meta property="og:type" content="website">
-<meta property="og:title" content="YunDuan">
-<meta property="og:url" content="https://soooocold.github.io/index.html">
+    <meta name="description" content="环境节点详情      节点分类 主机名 节点环境    pgNode1 pgdb1 Docker23.0.6 PostgreSQL13   pgNode2 pgdb2 Docker23.0.6 PostgreSQL13   pgpoolNode1 pgpool-1 PostgreSQL13 PGPOOL2-4.5.4   pgpoolNode2 pgpool-2 PostgreSQL13 pgp">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Postgre高可用配置">
+<meta property="og:url" content="https://soooocold.github.io/2024/10/21/postgre-pgppool2/index.html">
 <meta property="og:site_name" content="YunDuan">
-<meta property="og:description" content="试过才知道">
+<meta property="og:description" content="环境节点详情      节点分类 主机名 节点环境    pgNode1 pgdb1 Docker23.0.6 PostgreSQL13   pgNode2 pgdb2 Docker23.0.6 PostgreSQL13   pgpoolNode1 pgpool-1 PostgreSQL13 PGPOOL2-4.5.4   pgpoolNode2 pgpool-2 PostgreSQL13 pgp">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-10-21T03:40:37.000Z">
+<meta property="article:modified_time" content="2024-10-21T07:15:07.204Z">
 <meta property="article:author" content="YunDuan">
+<meta property="article:tag" content="Postgre">
 <meta name="twitter:card" content="summary">
 <link rel="publisher" href="%3Cg+:profile_link%3E">
 
 
-<link rel="canonical" href="https://soooocold.github.io/">
+<link rel="canonical" href="https://soooocold.github.io/2024/10/21/postgre-pgppool2/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":true,"isPost":false,"lang":"zh-CN","comments":"","permalink":"","path":"index.html","title":""}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://soooocold.github.io/2024/10/21/postgre-pgppool2/","path":"2024/10/21/postgre-pgppool2/","title":"Postgre高可用配置"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>YunDuan</title>
+<title>Postgre高可用配置 | YunDuan</title>
   
 
 
@@ -71,7 +74,7 @@
 
     <a href="/" class="brand" rel="start">
       <i class="logo-line"></i>
-      <h1 class="site-title">YunDuan</h1>
+      <p class="site-title">YunDuan</p>
       <i class="logo-line"></i>
     </a>
   </div>
@@ -97,7 +100,7 @@
   
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           文章目录
@@ -110,6 +113,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%BB%E8%8A%82%E7%82%B9%E5%AE%89%E8%A3%85"><span class="nav-number">1.</span> <span class="nav-text">数据库主节点安装</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BB%E5%BA%93%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">1.1.</span> <span class="nav-text">主库初始化</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E5%A4%87%E7%94%A8%E8%8A%82%E7%82%B9%E5%AE%89%E8%A3%85"><span class="nav-number">2.</span> <span class="nav-text">数据库备用节点安装</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%87%E5%BA%93%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">2.1.</span> <span class="nav-text">备库初始化</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E5%A4%87%E6%A3%80%E6%9F%A5"><span class="nav-number">3.</span> <span class="nav-text">主备检查</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%8A%82%E7%82%B9%E7%8A%B6%E6%80%81%E6%A3%80%E6%9F%A5"><span class="nav-number">3.1.</span> <span class="nav-text">节点状态检查</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B5%81%E5%A4%8D%E5%88%B6%E5%8A%9F%E8%83%BD%E6%A3%80%E6%9F%A5"><span class="nav-number">3.2.</span> <span class="nav-text">流复制功能检查</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#pgpool%E2%85%A1%E5%AE%89%E8%A3%85%EF%BC%88%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91%EF%BC%89"><span class="nav-number">4.</span> <span class="nav-text">pgpoolⅡ安装（源码编译）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83%E5%AE%89%E8%A3%85"><span class="nav-number">4.1.</span> <span class="nav-text">环境安装</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#pgpool%E2%85%A1%E7%BC%96%E8%AF%91"><span class="nav-number">4.2.</span> <span class="nav-text">pgpoolⅡ编译</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83%E4%BC%98%E5%8C%96%EF%BC%88%E5%8F%AF%E9%80%89%EF%BC%89"><span class="nav-number">4.3.</span> <span class="nav-text">环境优化（可选）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#pgpool%E2%85%A1%E9%85%8D%E7%BD%AE"><span class="nav-number">5.</span> <span class="nav-text">pgpoolⅡ配置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#pgpool%E2%85%A1%E8%BF%90%E8%A1%8C%E7%8E%AF%E5%A2%83%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">5.1.</span> <span class="nav-text">pgpoolⅡ运行环境初始化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#pgpool-conf%E9%85%8D%E7%BD%AE"><span class="nav-number">5.2.</span> <span class="nav-text">pgpool.conf配置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%85%E9%9A%9C%E8%BD%AC%E7%A7%BB%E8%84%9A%E6%9C%AC"><span class="nav-number">5.3.</span> <span class="nav-text">故障转移脚本</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#pgpool%E2%85%A1%E7%AE%A1%E7%90%86"><span class="nav-number">6.</span> <span class="nav-text">pgpoolⅡ管理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#pgpool%E2%85%A1%E5%90%AF%E5%81%9C%E7%AE%A1%E7%90%86"><span class="nav-number">6.1.</span> <span class="nav-text">pgpoolⅡ启停管理</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#pcp%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%B7%A5%E5%85%B7"><span class="nav-number">7.</span> <span class="nav-text">pcp命令行工具</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -147,16 +151,17 @@
 
     </div>
 
-    <div class="main-inner index posts-expand">
+    <div class="main-inner post posts-expand">
 
-    
+
+  
 
 
 <div class="post-block">
   
   
 
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://soooocold.github.io/2024/10/21/postgre-pgppool2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -170,13 +175,13 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | YunDuan">
+      <meta itemprop="name" content="Postgre高可用配置 | YunDuan">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2024/10/21/postgre-pgppool2/" class="post-title-link" itemprop="url">Postgre高可用配置</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          Postgre高可用配置
+        </h1>
 
         <div class="post-meta-container">
           <div class="post-meta">
@@ -213,8 +218,7 @@
     
     
     
-    <div class="post-body" itemprop="articleBody">
-          <p><strong>环境节点详情</strong></p>
+    <div class="post-body" itemprop="articleBody"><p><strong>环境节点详情</strong></p>
 <div class="table-01" style="width: 50%;border: ">
 
 <table>
@@ -329,7 +333,6 @@
 <h3 id="pgpoolⅡ管理"><a href="#pgpoolⅡ管理" class="headerlink" title="pgpoolⅡ管理"></a>pgpoolⅡ管理</h3><h4 id="pgpoolⅡ启停管理"><a href="#pgpoolⅡ启停管理" class="headerlink" title="pgpoolⅡ启停管理"></a>pgpoolⅡ启停管理</h4><p>环境初始化后，在prod下会生成两个可执行脚本：startall、shutdownall，需要手动注释和数据库启停相关命令，仅保留pgpoolⅡ程序的启停命令</p>
 <h3 id="pcp命令行工具"><a href="#pcp命令行工具" class="headerlink" title="pcp命令行工具"></a>pcp命令行工具</h3><p>pgpool-II 提供了一个命令行工具 pcp（Pgpool Control Protocol），用于管理和监控 pgpool-II 集群，命令在&#x2F;opt&#x2F;pgpool2&#x2F;bin，使用该工具需要对pcp.conf进行密码生成，以及在pgpool.conf中定义pcp的端口：pcp_port<br>使用参考示例：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#获取集群数据库节点信息</span><br><span class="line">pcp_watchdog_info  -W -p 11001</span><br></pre></td></tr></table></figure>
-      
     </div>
 
     
@@ -337,396 +340,38 @@
     
 
     <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>YunDuan
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://soooocold.github.io/2024/10/21/postgre-pgppool2/" title="Postgre高可用配置">https://soooocold.github.io/2024/10/21/postgre-pgppool2/</a>
+  </li>
+  <li class="post-copyright-license">
+      <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/publicdomain/zero/1.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>CC-ZERO</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
 </div>
 
+          <div class="post-tags">
+              <a href="/tags/Postgre/" rel="tag"># Postgre</a>
+          </div>
 
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://soooocold.github.io/2024/05/14/file-backup/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="YunDuan">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="YunDuan">
-      <meta itemprop="description" content="试过才知道">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | YunDuan">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2024/05/14/file-backup/" class="post-title-link" itemprop="url">基于Rsync增量备份方案</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2024-05-14 16:41:51" itemprop="dateCreated datePublished" datetime="2024-05-14T16:41:51+08:00">2024-05-14</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2024-05-24 16:43:51" itemprop="dateModified" datetime="2024-05-24T16:43:51+08:00">2024-05-24</time>
-    </span>
-
-  
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Changyan：</span>
-    
-    <a title="基于Rsync增量备份方案" href="/2024/05/14/file-backup/#SOHUCS" itemprop="discussionUrl">
-      <span id="sourceId::4882300f09296651e11f85251db0fd84" class="cy_cmt_count" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>提供一种Linux下通过通过rsync实现数据增量备份方案</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/05/14/file-backup/">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
-    </div>
 
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://soooocold.github.io/2024/04/15/docker-swarm/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="YunDuan">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="YunDuan">
-      <meta itemprop="description" content="试过才知道">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | YunDuan">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2024/04/15/docker-swarm/" class="post-title-link" itemprop="url">Docker overlay网络获取客户端真实IP</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2024-04-15 09:41:32" itemprop="dateCreated datePublished" datetime="2024-04-15T09:41:32+08:00">2024-04-15</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2024-05-15 08:41:36" itemprop="dateModified" datetime="2024-05-15T08:41:36+08:00">2024-05-15</time>
-    </span>
-
-  
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Changyan：</span>
-    
-    <a title="Docker overlay网络获取客户端真实IP" href="/2024/04/15/docker-swarm/#SOHUCS" itemprop="discussionUrl">
-      <span id="sourceId::5a7298973a68d77119df563c5d5f4945" class="cy_cmt_count" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>解决overlay网络下，Nginx等web服务器无法获取客户端真实IP问题</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/04/15/docker-swarm/">
-                阅读全文 &raquo;
-              </a>
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/05/14/file-backup/" rel="prev" title="基于Rsync增量备份方案">
+                  <i class="fa fa-angle-left"></i> 基于Rsync增量备份方案
+                </a>
             </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://soooocold.github.io/2024/04/12/zabbix/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="YunDuan">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="YunDuan">
-      <meta itemprop="description" content="试过才知道">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | YunDuan">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2024/04/12/zabbix/" class="post-title-link" itemprop="url">Zabbix 组件安装</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2024-04-12 11:36:00" itemprop="dateCreated datePublished" datetime="2024-04-12T11:36:00+08:00">2024-04-12</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2024-04-15 08:47:20" itemprop="dateModified" datetime="2024-04-15T08:47:20+08:00">2024-04-15</time>
-    </span>
-
-  
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Changyan：</span>
-    
-    <a title="Zabbix 组件安装" href="/2024/04/12/zabbix/#SOHUCS" itemprop="discussionUrl">
-      <span id="sourceId::be310fc579110afea37aa788cb928e47" class="cy_cmt_count" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>Zabbix基于Docker安装部署</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2024/04/12/zabbix/">
-                阅读全文 &raquo;
-              </a>
+            <div class="post-nav-item">
             </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://soooocold.github.io/2023/04/08/Golang-%E9%9D%99%E6%80%81%E6%96%87%E4%BB%B6%E7%BC%96%E8%AF%91%E8%87%B3%E4%BA%8C%E8%BF%9B%E5%88%B6%E6%96%87%E4%BB%B6/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="YunDuan">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="YunDuan">
-      <meta itemprop="description" content="试过才知道">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | YunDuan">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2023/04/08/Golang-%E9%9D%99%E6%80%81%E6%96%87%E4%BB%B6%E7%BC%96%E8%AF%91%E8%87%B3%E4%BA%8C%E8%BF%9B%E5%88%B6%E6%96%87%E4%BB%B6/" class="post-title-link" itemprop="url">Golang 静态文件编译至二进制文件</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2023-04-08 16:07:37" itemprop="dateCreated datePublished" datetime="2023-04-08T16:07:37+08:00">2023-04-08</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2024-04-15 08:47:20" itemprop="dateModified" datetime="2024-04-15T08:47:20+08:00">2024-04-15</time>
-    </span>
-
-  
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Changyan：</span>
-    
-    <a title="Golang 静态文件编译至二进制文件" href="/2023/04/08/Golang-%E9%9D%99%E6%80%81%E6%96%87%E4%BB%B6%E7%BC%96%E8%AF%91%E8%87%B3%E4%BA%8C%E8%BF%9B%E5%88%B6%E6%96%87%E4%BB%B6/#SOHUCS" itemprop="discussionUrl">
-      <span id="sourceId::3df112aabb5551c964789b2a0a501052" class="cy_cmt_count" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>程序示例</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/04/08/Golang-%E9%9D%99%E6%80%81%E6%96%87%E4%BB%B6%E7%BC%96%E8%AF%91%E8%87%B3%E4%BA%8C%E8%BF%9B%E5%88%B6%E6%96%87%E4%BB%B6/">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
+          </div>
     </footer>
   </article>
 </div>
@@ -735,6 +380,8 @@
 
 
 
+
+    <div class="comments" id="SOHUCS" sid="88b6375e821a8d8c37b9d192a146d4ab"></div>
 </div>
   </main>
 
