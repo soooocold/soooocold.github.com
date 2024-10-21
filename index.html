@@ -187,7 +187,7 @@
       <span class="post-meta-item-text">发表于</span>
       
 
-      <time title="创建时间：2024-10-21 11:40:37 / 修改时间：15:15:07" itemprop="dateCreated datePublished" datetime="2024-10-21T11:40:37+08:00">2024-10-21</time>
+      <time title="创建时间：2024-10-21 11:40:37 / 修改时间：15:20:59" itemprop="dateCreated datePublished" datetime="2024-10-21T11:40:37+08:00">2024-10-21</time>
     </span>
 
   
@@ -214,121 +214,15 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <p><strong>环境节点详情</strong></p>
-<div class="table-01" style="width: 50%;border: ">
-
-<table>
-<thead>
-<tr>
-<th>节点分类</th>
-<th>主机名</th>
-<th>节点环境</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>pgNode1</td>
-<td>pgdb1</td>
-<td>Docker23.0.6 PostgreSQL13</td>
-</tr>
-<tr>
-<td>pgNode2</td>
-<td>pgdb2</td>
-<td>Docker23.0.6 PostgreSQL13</td>
-</tr>
-<tr>
-<td>pgpoolNode1</td>
-<td>pgpool-1</td>
-<td>PostgreSQL13 PGPOOL2-4.5.4</td>
-</tr>
-<tr>
-<td>pgpoolNode2</td>
-<td>pgpool-2</td>
-<td>PostgreSQL13 pgpool2-4.5.4</td>
-</tr>
-<tr>
-<td>pgpoolNode3</td>
-<td>pgpool-3</td>
-<td>PostgreSQL13 pgpool2-4.5.4</td>
-</tr>
-</tbody></table>
-</div>
-
-<p><strong>故障漂移思想</strong></p>
-<ol>
-<li>主备搭建完毕后，使用pgpool实现读写分离</li>
-<li>pgpool至少三个节点，并且监听数据库状态</li>
-<li>当主数据库宕机，触发failover，执行备库提权命令，使得备库成为新的主库，成为主库之后，需要删掉数据目录中的postgresql.auto.conf文件</li>
-<li>原有主库恢复之后，需要手动处理，成为新的备库加入集群</li>
-</ol>
-<h3 id="数据库主节点安装"><a href="#数据库主节点安装" class="headerlink" title="数据库主节点安装"></a>数据库主节点安装</h3><details>
-<summary> postgre_primary_create.sh </summary>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line">docker create --name postgre_primary \</span><br><span class="line">              -p 0.0.0.0:5400:5400 \</span><br><span class="line">              -e TZ=Asia/Shanghai \</span><br><span class="line">              --restart always \</span><br><span class="line">              -v /data/dockerstore/postgre/data:/pgdata/data \</span><br><span class="line">              --dns 8.8.8.8 \</span><br><span class="line">              --hostname postgre \</span><br><span class="line">              --ulimit nofile=102400:102400 \</span><br><span class="line">              --ulimit nproc=102400 \</span><br><span class="line">              --sysctl net.core.somaxconn=65535 \</span><br><span class="line">              --entrypoint /pgdata/data/pg_start.sh \</span><br><span class="line">              registry.cloudtop.cloud/x86_64/postgre:13.4.1</span><br></pre></td></tr></table></figure>
-<summary> pg_start.sh  </summary>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="built_in">chown</span> -R postgres:postgres /pgdata</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="built_in">sleep</span> 100000</span></span><br><span class="line">chmod -R 700 /pgdata/data</span><br><span class="line">su postgres -c &quot;source /etc/profile &amp;&amp; postgres&quot;</span><br></pre></td></tr></table></figure>
-</details>
-
-<h4 id="主库初始化"><a href="#主库初始化" class="headerlink" title="主库初始化"></a>主库初始化</h4><p>执行容器创建脚本，进入容器使用psql登录数据库，并执行以下操作</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">创建复制账号</span></span><br><span class="line">CREATE USER replica replication encrypted password  &#x27;replica&#x27;;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">修改pg_hba.conf,添加以下内容</span></span><br><span class="line">host   replication    replica    192.168.0.165/32     trust</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">修改postgresql.conf</span></span><br><span class="line">wal_level = replica</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">重启数据库</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="数据库备用节点安装"><a href="#数据库备用节点安装" class="headerlink" title="数据库备用节点安装"></a>数据库备用节点安装</h3><details>
-<summary> postgre_standby_create.sh </summary>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line">docker create --name postgre_standby \</span><br><span class="line">              -p 0.0.0.0:5400:5400 \</span><br><span class="line">              -e TZ=Asia/Shanghai \</span><br><span class="line">              --restart always \</span><br><span class="line">              -v /data/dockerstore/postgre/data:/pgdata/data \</span><br><span class="line">              --dns 8.8.8.8 \</span><br><span class="line">              --hostname postgre \</span><br><span class="line">              --ulimit nofile=102400:102400 \</span><br><span class="line">              --ulimit nproc=102400 \</span><br><span class="line">              --sysctl net.core.somaxconn=65535 \</span><br><span class="line">              --entrypoint /pgdata/data/pg_start.sh \</span><br><span class="line">              registry.cloudtop.cloud/x86_64/postgre:13.4.1</span><br></pre></td></tr></table></figure>
-<summary> pg_start.sh  </summary>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="built_in">sleep</span> 100000</span></span><br><span class="line">chmod -R 700 /pgdata/data</span><br><span class="line">su postgres -c &quot;source /etc/profile &amp;&amp; postgres&quot;</span><br></pre></td></tr></table></figure>
-</details>
-
-<h4 id="备库初始化"><a href="#备库初始化" class="headerlink" title="备库初始化"></a>备库初始化</h4><p><span style="color:red;">备库初始化要求数据库是关闭状态，因此容器启动时需要手动修改entrypoint命令，使用bash进入容器进行初始化操作，而不是直接启动数据库进程</span></p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">复制主库基础数据</span></span><br><span class="line">pg_basebackup -F p -P -R -D /data/pgdata  -h xx.xx.xx.xx -p 5432 -U replica -W  (主库ip)</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">修改postgresql.conf</span></span><br><span class="line">hot_standby = on ＃ 说明这台机器不仅仅是用于数据归档，也用于数据查询</span><br><span class="line">max_standby_streaming_delay = 30s # 数据流备份的最大延迟时间</span><br><span class="line">wal_receiver_status_interval = 10s # 多久向主报告一次从的状态</span><br><span class="line">hot_standby_feedback = on # 如果有错误的数据复制，是否向主进行反馈</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">启动数据库</span></span><br></pre></td></tr></table></figure>
-<h3 id="主备检查"><a href="#主备检查" class="headerlink" title="主备检查"></a>主备检查</h3><h4 id="节点状态检查"><a href="#节点状态检查" class="headerlink" title="节点状态检查"></a>节点状态检查</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">psql连接主库，执行以下操作</span></span><br><span class="line">select pg_is_in_recovery();</span><br></pre></td></tr></table></figure>
-<p>备库 t；主库 f</p>
-<h4 id="流复制功能检查"><a href="#流复制功能检查" class="headerlink" title="流复制功能检查"></a>流复制功能检查</h4><p>主库创建表结构、插入数据，观察备库是否正常同步；<br>确认备库无数据写入权限</p>
-<h3 id="pgpoolⅡ安装（源码编译）"><a href="#pgpoolⅡ安装（源码编译）" class="headerlink" title="pgpoolⅡ安装（源码编译）"></a>pgpoolⅡ安装（源码编译）</h3><h4 id="环境安装"><a href="#环境安装" class="headerlink" title="环境安装"></a>环境安装</h4><p>由于pgpool在编译安装依赖postgre相关环境，因此需要先安装postgre数据库（只需要安装，不需要启动）以及必要的工具包。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">sudo sh -c &#x27;echo &quot;deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main&quot; &gt; /etc/apt/sources.list.d/pgdg.list&#x27;</span><br><span class="line">wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -</span><br><span class="line">sudo apt-get update</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">安装postgre的版本和数据库节点的版本一致</span></span><br><span class="line">sudo apt-get -y install postgresql-13</span><br><span class="line"></span><br><span class="line">sudo apt install build-essential</span><br><span class="line">sudo apt install libpq-dev</span><br><span class="line"></span><br><span class="line">apt install arping #解决VIP切换节点，交换机arp表项更新不及时问题</span><br></pre></td></tr></table></figure>
-<h4 id="pgpoolⅡ编译"><a href="#pgpoolⅡ编译" class="headerlink" title="pgpoolⅡ编译"></a>pgpoolⅡ编译</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">源码下载，本次使用版本：4.5.4</span></span><br><span class="line">wget https://www.pgpool.net/mediawiki/images/pgpool-II-4.5.4.tar.gz </span><br><span class="line">tar -xzvf pgpool-II-4.5.4.tar.gz</span><br><span class="line">cd pgpool-II-4.5.4</span><br><span class="line">./configure  --prefix=/opt/pgpool2-4.5.1  --with-pgsql-includedir=/usr/include/postgresql</span><br><span class="line">make &amp;&amp; make install </span><br><span class="line">ln -s /opt/pgpool2-4.5.4 /opt/pgpool2</span><br></pre></td></tr></table></figure>
-<h4 id="环境优化（可选）"><a href="#环境优化（可选）" class="headerlink" title="环境优化（可选）"></a>环境优化（可选）</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/etc/sysctl.conf</span><br><span class="line">net.core.somaxconn = 65500</span><br></pre></td></tr></table></figure>
-
-<h3 id="pgpoolⅡ配置"><a href="#pgpoolⅡ配置" class="headerlink" title="pgpoolⅡ配置"></a>pgpoolⅡ配置</h3><h4 id="pgpoolⅡ运行环境初始化"><a href="#pgpoolⅡ运行环境初始化" class="headerlink" title="pgpoolⅡ运行环境初始化"></a>pgpoolⅡ运行环境初始化</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">#以下操作三台节点同步进行</span><br><span class="line">mkdir /opt/pgpool2/prod &amp;&amp; cd /opt/pgpool2/prod </span><br><span class="line">#执行以下命令会在当前文件夹下生成pgpoolⅡ相关配置</span><br><span class="line">../../bin/ ../../bin/pgpool_setup</span><br><span class="line"></span><br><span class="line">#生成pcp密码,写入pcp.conf </span><br><span class="line">pg_md5   youer_password</span><br><span class="line">#生成pool_md5密码,写入pool_passwd </span><br><span class="line">../../bin/pg_md5 -m -f pgpool.conf   -p -u pgdb_user</span><br><span class="line"></span><br><span class="line">#修改pool_hba.conf</span><br><span class="line">echo &quot;host    all         all         0.0.0.0/0             md5&quot; &gt;&gt; etc/pool_hba.conf</span><br><span class="line"></span><br><span class="line">#将节点对应ip写入/etc/hosts文件</span><br><span class="line">xx.xx.xx.230 pgdb1</span><br><span class="line">xx.xx.xx.231 pgdb2</span><br><span class="line">xx.xx.xx.232 pgpool-1</span><br><span class="line">xx.xx.xx.233 pgpool-2</span><br><span class="line">xx.xx.xx.234 pgpool-3</span><br></pre></td></tr></table></figure>
-
-<p>每个pgpool节点目录prod&#x2F;etc中创建以下文件pgpool_node_id，写入不同id</p>
-<div class="table-01" style="width: 50%;border: ">
-
-<table>
-<thead>
-<tr>
-<th>节点</th>
-<th>pgpool_node_id</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>pgpoolNode1</td>
-<td>0</td>
-</tr>
-<tr>
-<td>pgpoolNode2</td>
-<td>1</td>
-</tr>
-<tr>
-<td>pgpoolNode3</td>
-<td>2</td>
-</tr>
-</tbody></table>
-</div>
-
-<h4 id="pgpool-conf配置"><a href="#pgpool-conf配置" class="headerlink" title="pgpool.conf配置"></a>pgpool.conf配置</h4><p>配置文件包含大量参数配置，主要参数如下，可直接在文件末尾添加<br><span style="color:red;">注意：配置文件包含本机网卡名的配置，需要根据实际情况修改</span></p>
-<details>
-<summary> pgpool.conf  </summary>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line">backend_clustering_mode = streaming_replication</span><br><span class="line">enable_pool_hba = on</span><br><span class="line">listen_addresses = &#x27;*&#x27;</span><br><span class="line">sr_check_user = &#x27;pgdb_user&#x27; #流复制状态检查</span><br><span class="line">sr_check_password = &#x27;pgdb_password&#x27; </span><br><span class="line">health_check_period0 = 10</span><br><span class="line">health_check_timeout0 = 20</span><br><span class="line">health_check_user0 = &#x27;pgdb_user&#x27; #健康状态检查</span><br><span class="line">health_check_password0 = &#x27;pgdb_password&#x27;</span><br><span class="line">health_check_database0 = &#x27;postgres&#x27;</span><br><span class="line">health_check_max_retries0 = 3</span><br><span class="line">health_check_retry_delay0 = 1</span><br><span class="line">connect_timeout0 = 1000</span><br><span class="line">health_check_period1 = 10</span><br><span class="line">health_check_timeout1 = 20</span><br><span class="line">health_check_user1 = &#x27;pgdb_user&#x27;</span><br><span class="line">health_check_password1 = &#x27;usr@pgdb_password&#x27;</span><br><span class="line">health_check_database1 = &#x27;postgres&#x27;</span><br><span class="line">health_check_max_retries1 = 3</span><br><span class="line">health_check_retry_delay1 = 1</span><br><span class="line">connect_timeout1 = 1000</span><br><span class="line">memqcache_oiddir = &#x27;/opt/pgpool2/prod/log/pgpool/oiddir&#x27;</span><br><span class="line">log_per_node_statement = on</span><br><span class="line">failover_command = &#x27;/opt/pgpool2/prod/etc/failover.sh %h %H&#x27;</span><br><span class="line">unix_socket_directories = &#x27;/tmp&#x27;</span><br><span class="line">pcp_socket_dir = &#x27;/tmp&#x27;</span><br><span class="line">logging_collector = off</span><br><span class="line">log_line_prefix = &#x27;%m: %a pid %p: &#x27;</span><br><span class="line">port = 5400</span><br><span class="line">pcp_port = 11001</span><br><span class="line">pid_file_name = &#x27;/opt/pgpool2/prod/run/pgpool.pid&#x27;</span><br><span class="line">logdir = &#x27;/opt/pgpool2/prod/log&#x27;</span><br><span class="line">backend_hostname0 = &#x27;pgdb1&#x27; #后端数据库主节点</span><br><span class="line">backend_port0 = 5400</span><br><span class="line">backend_weight0 = 1</span><br><span class="line">backend_hostname1 = &#x27;pgdb2&#x27; #后端数据库备用节点</span><br><span class="line">backend_port1 = 5400</span><br><span class="line">backend_weight1 = 1</span><br><span class="line"></span><br><span class="line">use_watchdog = on</span><br><span class="line">trusted_servers = &#x27;pgpool-1,pgpool-2,pgpool-3&#x27;</span><br><span class="line">hostname0 = &#x27;pgpool-1&#x27;</span><br><span class="line">wd_port0 = 9000</span><br><span class="line">pgpool_port0 = 5400</span><br><span class="line"></span><br><span class="line">hostname1 = &#x27;pgpool-2&#x27;</span><br><span class="line">wd_port1 = 9000</span><br><span class="line">pgpool_port1 = 5400</span><br><span class="line"></span><br><span class="line">hostname2 = &#x27;pgpool-3&#x27;</span><br><span class="line">wd_port2 = 9000</span><br><span class="line">pgpool_port2 = 5400</span><br><span class="line"></span><br><span class="line">wd_priority = 3 #wd_priority值较高的节点作为Leader节点</span><br><span class="line">wd_authkey = &#x27;CloudtopKey&#x27;</span><br><span class="line">delegate_ip = &#x27;xx.xx.xx.235&#x27;</span><br><span class="line">if_up_cmd = &#x27;/usr/bin/sudo /sbin/ip addr add $_IP_$/24 dev ens18 label ens18:0&#x27;</span><br><span class="line">if_down_cmd = &#x27;/usr/bin/sudo /sbin/ip addr del $_IP_$/24 dev ens18&#x27;</span><br><span class="line">arping_cmd = &#x27;/usr/bin/sudo /usr/sbin/arping -U $_IP_$ -w 1 -I ens18:0&#x27;</span><br><span class="line">clear_memqcache_on_escalation = on</span><br><span class="line"></span><br><span class="line">wd_monitoring_interfaces_list = &#x27;ens18&#x27;</span><br><span class="line">wd_lifecheck_method = &#x27;heartbeat&#x27;</span><br><span class="line">wd_interval = 1</span><br><span class="line">heartbeat_hostname0 = &#x27;pgpool-1&#x27;</span><br><span class="line">heartbeat_port0 = 9694</span><br><span class="line">heartbeat_device0 = &#x27;ens18&#x27;</span><br><span class="line"></span><br><span class="line">heartbeat_hostname1 = &#x27;pgpool-2&#x27;</span><br><span class="line">heartbeat_port1 = 9694</span><br><span class="line">heartbeat_device1 = &#x27;ens18&#x27;</span><br><span class="line"></span><br><span class="line">heartbeat_hostname2 = &#x27;pgpool-3&#x27;</span><br><span class="line">heartbeat_port2 = 9694</span><br><span class="line">heartbeat_device2 = &#x27;ens18&#x27;</span><br></pre></td></tr></table></figure>
-</details>
-
-<h4 id="故障转移脚本"><a href="#故障转移脚本" class="headerlink" title="故障转移脚本"></a>故障转移脚本</h4><p>pgpoolⅡ环境初始化时会生成一个故障转移脚本，经过测试发现该脚本存在兼容性问题，主要原因来自shell脚本传递变量参数，当变量为null，参数位置变化导致脚本执行异常，可直接使用以下脚本</p>
-<details>
-<summary> failover.sh  </summary>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">failed_node_hostname=$1</span><br><span class="line">new_main_hostname=$2</span><br><span class="line">mydir=/opt/pgpool2/prod</span><br><span class="line">log=$mydir/log/failover.log</span><br><span class="line">pgpassword=&quot;pgdb_password&quot;</span><br><span class="line"></span><br><span class="line">date &gt;&gt; $log</span><br><span class="line">echo &quot;failover script started for node: $failed_node_hostname&quot; &gt;&gt; $log</span><br><span class="line">echo &quot;new node: $new_main_hostname&quot; &gt;&gt; $log</span><br><span class="line">export PGPASSWORD=$&#123;pgpassword&#125;</span><br><span class="line">psql -h $new_main_hostname -U pgdb_user -p 5400  -d postgres -c &quot;SELECT pg_promote();&quot;</span><br><span class="line">if [ $? -eq 0 ]; then</span><br><span class="line">    echo &quot;Standby database promoted successfully.&quot; &gt;&gt; $log</span><br><span class="line">else</span><br><span class="line">    echo &quot;Failed to promote standby database.&quot; &gt;&gt; $log</span><br><span class="line">    export -n PGPASSWORD</span><br><span class="line">    exit 1</span><br><span class="line">fi</span><br><span class="line">export -n PGPASSWORD</span><br><span class="line">date &gt;&gt; $log</span><br><span class="line">echo &quot;failover script ended&quot; &gt;&gt; $log</span><br></pre></td></tr></table></figure>
-</details>
-
-<h3 id="pgpoolⅡ管理"><a href="#pgpoolⅡ管理" class="headerlink" title="pgpoolⅡ管理"></a>pgpoolⅡ管理</h3><h4 id="pgpoolⅡ启停管理"><a href="#pgpoolⅡ启停管理" class="headerlink" title="pgpoolⅡ启停管理"></a>pgpoolⅡ启停管理</h4><p>环境初始化后，在prod下会生成两个可执行脚本：startall、shutdownall，需要手动注释和数据库启停相关命令，仅保留pgpoolⅡ程序的启停命令</p>
-<h3 id="pcp命令行工具"><a href="#pcp命令行工具" class="headerlink" title="pcp命令行工具"></a>pcp命令行工具</h3><p>pgpool-II 提供了一个命令行工具 pcp（Pgpool Control Protocol），用于管理和监控 pgpool-II 集群，命令在&#x2F;opt&#x2F;pgpool2&#x2F;bin，使用该工具需要对pcp.conf进行密码生成，以及在pgpool.conf中定义pcp的端口：pcp_port<br>使用参考示例：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#获取集群数据库节点信息</span><br><span class="line">pcp_watchdog_info  -W -p 11001</span><br></pre></td></tr></table></figure>
+          <p>一种Postgre集群搭建方案</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2024/10/21/postgre-pgppool2/">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
       
     </div>
 
